@@ -3,6 +3,7 @@ import streamlit as st
 from loader import get_url, TICKERS_MAPPER, CANDLES
 from data_parser import get_df, get_driver_and_wait, get_excel_workbook
 
+from selenium.common.exceptions import TimeoutException
 
 
 tickers_choice = st.multiselect(label='Ticker', placeholder='Gold', options=TICKERS_MAPPER.keys())
@@ -21,13 +22,14 @@ if submit_btn:
     for ticker in tickers_choice:
         url = get_url(ticker)
         print(url)
-        
-        df = get_df(st.session_state.driver, st.session_state.wait, 
+        try:
+            df = get_df(st.session_state.driver, st.session_state.wait, 
                     url, candle_choice)
-        dfs.append(df)
-    
-    
-    st.session_state.excel_bytes = get_excel_workbook(dfs, tickers_choice)
+            dfs.append(df)
+        except TimeoutException as e:
+            print(e, ticker)
+    if dfs:
+        st.session_state.excel_bytes = get_excel_workbook(dfs, tickers_choice)
 
 if st.session_state.excel_bytes:
     st.download_button(
