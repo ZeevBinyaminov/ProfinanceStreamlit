@@ -2,7 +2,7 @@ import time
 from typing import List
 import io
 
-from bs4 import BeautifulSoup as bs 
+from bs4 import BeautifulSoup as bs
 import pandas as pd
 
 from selenium import webdriver
@@ -17,7 +17,6 @@ from selenium.common.exceptions import (
 )
 
 
-
 def get_driver_and_wait(timeout=8):
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--blink-settings=imagesEnabled=false")
@@ -27,19 +26,18 @@ def get_driver_and_wait(timeout=8):
 
     driver = webdriver.Chrome(options=chrome_options)
     wait = WebDriverWait(driver, timeout=timeout)
-    
+
     return driver, wait
-    
 
 
 def safe_click(driver, element, attempts: int = 5, pause: float = 0.15):
     """
     Надёжный клик по WebElement.
-    
+
     - Скроллит элемент в центр
     - Кликает через ActionChains
     - Делает несколько попыток при перехвате клика / stale element
-    
+
     :param driver: WebDriver
     :param element: WebElement (уже найденный)
     :param attempts: количество попыток
@@ -65,7 +63,7 @@ def safe_click(driver, element, attempts: int = 5, pause: float = 0.15):
                 .click(element) \
                 .perform()
 
-            return  
+            return
 
         except (ElementClickInterceptedException, StaleElementReferenceException) as e:
             last_exc = e
@@ -74,33 +72,37 @@ def safe_click(driver, element, attempts: int = 5, pause: float = 0.15):
     raise last_exc
 
 
-
 def get_data(driver, wait, url, target="1Hour"):
     driver.get(url)
-    
-    show_table_btn = wait.until(EC.element_to_be_clickable((By.ID, "chart_input_history")))
-    show_table_btn.click()
 
-    table = wait.until(EC.visibility_of_element_located((By.ID, "table_history")))
-    wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#table_history tbody tr:nth-child(2) td")))
+    show_table_btn = wait.until(
+        EC.element_to_be_clickable((By.ID, "chart_input_history")))
+    safe_click(driver, show_table_btn)
 
-    wait.until(EC.element_to_be_clickable((By.ID, "chart_input_tt_btn"))).click()
+    table = wait.until(EC.visibility_of_element_located(
+        (By.ID, "table_history")))
+    wait.until(EC.visibility_of_element_located(
+        (By.CSS_SELECTOR, "#table_history tbody tr:nth-child(2) td")))
+
+    chart_input_tt_btn = wait.until(EC.element_to_be_clickable(
+        (By.ID, "chart_input_tt_btn")))
+    safe_click(driver, chart_input_tt_btn)
+
     wait.until(EC.visibility_of_element_located((By.ID, "tt_div")))
 
-
     target_cell = wait.until(EC.presence_of_element_located(
-        (By.XPATH, f"//table[@id='tt_table']//td[normalize-space()='{target}']")
+        (By.XPATH,
+         f"//table[@id='tt_table']//td[normalize-space()='{target}']")
     ))
-
 
     safe_click(driver, target_cell)
 
     more_data_btn = driver.find_element(By.CSS_SELECTOR, '#chart_button_minus')
     for _ in range(8):
         safe_click(driver, more_data_btn)
-    
-    
-    wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#table_history tbody tr:nth-child(2) td")))
+
+    wait.until(EC.visibility_of_element_located(
+        (By.CSS_SELECTOR, "#table_history tbody tr:nth-child(2) td")))
     html = driver.page_source
     soup = bs(html, features="lxml")
 
@@ -113,18 +115,19 @@ def get_data(driver, wait, url, target="1Hour"):
 
 def parse_rows_to_df(rows: list):
     df = pd.DataFrame(rows[1:], columns=rows[0])
-    df.dropna(inplace=True) 
-    
-    df[['Open',	'High',	'Low',	'Close']] = df[['Open',	'High',	'Low',	'Close']].astype(float)
+    df.dropna(inplace=True)
+
+    df[['Open',	'High',	'Low',	'Close']] = df[[
+        'Open',	'High',	'Low',	'Close']].astype(float)
     df['Время'] = pd.to_datetime(df['Время'], dayfirst=True)
     df.rename(axis=1, mapper={'Время': 'Datetime'}, inplace=True)
-    
+
     df.sort_values(by=['Datetime'], inplace=True)
     df.reset_index(drop=True, inplace=True)
 
     df['Date'] = df['Datetime'].dt.date
     df['Hour'] = df['Datetime'].dt.hour
-    
+
     return df
 
 
@@ -132,14 +135,13 @@ def get_df(driver, wait, url, target='1Hour'):
     data = get_data(driver, wait, url, target)
     df = parse_rows_to_df(data)
     return df
-    
+
+
 def get_excel_workbook(df_list: List[pd.DataFrame], labels: List[str]):
     buffer = io.BytesIO()
-    
+
     with pd.ExcelWriter(buffer, mode='w') as writer:
         for df, label in zip(df_list, labels):
             df.to_excel(writer, sheet_name=label, index=False)
-            
+
     return buffer
-    
-    
