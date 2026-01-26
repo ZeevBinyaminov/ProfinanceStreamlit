@@ -75,6 +75,14 @@ def safe_click(driver, element, attempts: int = 5, pause: float = 0.15):
 def get_data(driver, wait, url, target="1Hour"):
     driver.get(url)
 
+    driver.execute_script("""
+    document.querySelectorAll("iframe[src*='yastatic.net/safeframe']").forEach(f => {
+    f.style.display = 'none';
+    f.style.visibility = 'hidden';
+    f.style.pointerEvents = 'none';
+    });
+    """)
+
     show_table_btn = wait.until(
         EC.element_to_be_clickable((By.ID, "chart_input_history")))
     safe_click(driver, show_table_btn)
