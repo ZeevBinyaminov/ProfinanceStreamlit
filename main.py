@@ -1,3 +1,5 @@
+from string import punctuation 
+
 import streamlit as st
 
 from loader import get_url, TICKERS_MAPPER, CANDLES
@@ -5,6 +7,10 @@ from data_parser import get_df, get_driver_and_wait, get_excel_workbook
 
 from selenium.common.exceptions import TimeoutException
 
+def remove_punct(string:str) -> str:
+    for sym in punctuation:
+        string = string.replace(sym, "_")
+    return string
 
 tickers_choice = st.multiselect(label='Ticker', placeholder='Gold', options=TICKERS_MAPPER.keys())
 candle_choice = st.selectbox(label='Timeframe', placeholder='1Hour', options=CANDLES)
@@ -29,6 +35,7 @@ if submit_btn:
         except TimeoutException as e:
             print(e, ticker)
     if dfs:
+        tickers_choice = list(map(remove_punct, tickers_choice))
         st.session_state.excel_bytes = get_excel_workbook(dfs, tickers_choice)
 
 if st.session_state.excel_bytes:
