@@ -20,8 +20,8 @@ from selenium.common.exceptions import (
 def get_driver_and_wait(timeout=8):
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--blink-settings=imagesEnabled=false")
-    chrome_options.add_argument("--headless=new")
-    chrome_options.add_argument("no-sandbox")
+    # chrome_options.add_argument("--headless=new")
+    # chrome_options.add_argument("no-sandbox")
     chrome_options.add_argument("disable-dev-shm-usage")
 
     driver = webdriver.Chrome(options=chrome_options)
@@ -72,6 +72,26 @@ def safe_click(driver, element, attempts: int = 5, pause: float = 0.15):
     raise last_exc
 
 
+def table_signature(driver) -> tuple:
+    """
+    Возвращает сигнатуру текущего состояния таблицы:
+    (кол-во строк, текст первой строки, текст последней строки)
+    """
+    rows = driver.find_elements(By.CSS_SELECTOR, "#table_history tbody tr")
+    n = len(rows)
+    first = rows[0].text if n else ""
+    last = rows[-1].text if n else ""
+    return (n, first, last)
+
+
+def wait_table_updated(driver, wait, old_sig, timeout=10):
+    """
+    Ждёт, пока таблица изменит сигнатуру относительно old_sig.
+    """
+    local_wait = wait if timeout is None else WebDriverWait(driver, timeout)
+    return local_wait.until(lambda d: table_signature(d) != old_sig)
+
+
 def get_data(driver, wait, url, target="1Hour"):
     driver.get(url)
 
@@ -105,9 +125,20 @@ def get_data(driver, wait, url, target="1Hour"):
 
     safe_click(driver, target_cell)
 
-    more_data_btn = driver.find_element(By.CSS_SELECTOR, '#chart_button_minus')
+    more_data_btn = wait.until(EC.element_to_be_clickable(
+        (By.CSS_SELECTOR, "#chart_button_minus")))
+
     for _ in range(8):
+        old_sig = table_signature(driver)
+
         safe_click(driver, more_data_btn)
+
+        # ждём, что таблица реально обновилась
+        try:
+            wait_table_updated(driver, wait, old_sig, timeout=10)
+        except TimeoutException:
+            # на всякий случай: иногда клик прошёл, но данных больше нет / сервер не отдаёт
+            break
 
     wait.until(EC.visibility_of_element_located(
         (By.CSS_SELECTOR, "#table_history tbody tr:nth-child(2) td")))
@@ -124,6 +155,8 @@ def get_data(driver, wait, url, target="1Hour"):
 def parse_rows_to_df(rows: list):
     df = pd.DataFrame(rows[1:], columns=rows[0])
     df.dropna(inplace=True)
+    df[['Open',	'High',	'Low',	'Close']] = df[[
+        'Open',	'High',	'Low',	'Close']].map(str.strip)
 
     df[['Open',	'High',	'Low',	'Close']] = df[[
         'Open',	'High',	'Low',	'Close']].astype(float)
