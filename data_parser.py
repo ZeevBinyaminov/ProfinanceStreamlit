@@ -26,7 +26,7 @@ class Singleton:
         return cls._instance
 
 
-class WebDriverSingleton(webdriver.Chrome, Singleton):
+class ChromeWebDriverSingleton(webdriver.Chrome, Singleton):
     pass
 
 
@@ -41,7 +41,7 @@ def get_driver_and_wait(timeout=8):
     chrome_options.add_argument("no-sandbox")
     chrome_options.add_argument("disable-dev-shm-usage")
 
-    driver = WebDriverSingleton.Chrome(options=chrome_options)
+    driver = ChromeWebDriverSingleton(options=chrome_options)
     wait = WebDriverWaitSingleton(driver, timeout=timeout)
 
     return driver, wait
