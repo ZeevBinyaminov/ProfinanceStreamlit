@@ -154,7 +154,7 @@ def get_data(driver, wait, url, target="1Hour"):
         if old_sig[0] == 3001:
             break
         try:
-            wait_table_updated(driver, wait, old_sig, timeout=5)
+            wait_table_updated(driver, wait, old_sig, timeout=10)
         except TimeoutException:
             # на всякий случай: иногда клик прошёл, но данных больше нет / сервер не отдаёт
             break
