@@ -17,6 +17,23 @@ from selenium.common.exceptions import (
 )
 
 
+class Singleton:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+
+
+class WebDriverSingleton(webdriver.Chrome, Singleton):
+    pass
+
+
+class WebDriverWaitSingleton(WebDriverWait, Singleton):
+    pass
+
+
 def get_driver_and_wait(timeout=8):
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--blink-settings=imagesEnabled=false")
@@ -24,8 +41,8 @@ def get_driver_and_wait(timeout=8):
     chrome_options.add_argument("no-sandbox")
     chrome_options.add_argument("disable-dev-shm-usage")
 
-    driver = webdriver.Chrome(options=chrome_options)
-    wait = WebDriverWait(driver, timeout=timeout)
+    driver = WebDriverSingleton.Chrome(options=chrome_options)
+    wait = WebDriverWaitSingleton(driver, timeout=timeout)
 
     return driver, wait
 
