@@ -26,11 +26,11 @@ class Singleton:
         return cls._instance
 
 
-class ChromeWebDriverSingleton(webdriver.Chrome, Singleton):
+class ChromeWebDriverSingleton(Singleton, webdriver.Chrome):
     pass
 
 
-class WebDriverWaitSingleton(WebDriverWait, Singleton):
+class WebDriverWaitSingleton(Singleton, WebDriverWait):
     pass
 
 
