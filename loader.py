@@ -83,10 +83,14 @@ TICKERS_MAPPER = {
 }
 
 
-CANDLES = ['1Min', '5Min', '15Min', '30Min', '1Hour', '2Hour', '4Hour', '1Day', '1Week']
+CANDLES = ['1Min', '5Min', '15Min', '30Min',
+           '1Hour', '2Hour', '4Hour', '1Day', '1Week']
 
 
-# BASE_URL = 'https://www.profinance.ru/chart/{ticker}/?s={ticker}&hist=true'
+DEFAULT_CHOICE = ['Gold', 'Silver', 'Platinum', 'Palladium',
+                  'Copper', 'Brent Oil', 'Bitcoin', 'Nasdaq 100 (FUT)']
+
+
 BASE_URL = 'https://www.profinance.ru/chart/{ticker}'
 
 

@@ -47,7 +47,7 @@ def get_driver_and_wait(timeout=8):
     return driver, wait
 
 
-def safe_click(driver, element, attempts: int = 5, pause: float = 0.15):
+def safe_click(driver, element, attempts: int = 5, pause: float = 0.5):
     """
     Надёжный клик по WebElement.
 
