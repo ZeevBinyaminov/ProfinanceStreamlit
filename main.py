@@ -11,6 +11,7 @@ from config import logger
 def remove_punct(string: str) -> str:
     for sym in punctuation:
         string = string.replace(sym, "_")
+    string = string.strip("_")
     return string
 
 
@@ -27,12 +28,11 @@ st.session_state.setdefault("excel_bytes", None)
 if submit_btn:
     if st.session_state.driver is None or st.session_state.wait is None:
         st.session_state.driver, st.session_state.wait = get_driver_and_wait()
-        logger.info("Session is opened")
+        logger.info("Session is opened successfully")
 
     dfs = []
     for ticker in tickers_choice:
         url = get_url(ticker)
-        print(url)
         try:
             df = get_df(st.session_state.driver, st.session_state.wait,
                         url, candle_choice)
