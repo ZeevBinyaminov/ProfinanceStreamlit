@@ -42,6 +42,7 @@ if submit_btn:
     if dfs:
         tickers_choice = list(map(remove_punct, tickers_choice))
         st.session_state.excel_bytes = get_excel_workbook(dfs, tickers_choice)
+        logger.info(f"Excel file is uploaded successfully: {tickers_choice}")
 
 if st.session_state.excel_bytes:
     st.download_button(
@@ -49,5 +50,6 @@ if st.session_state.excel_bytes:
         data=st.session_state.excel_bytes,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         file_name="quotes_profinance.xlsx",
+        on_click='ignore'
     )
-    logger.info(f"Excel file is uploaded successfully: {tickers_choice}")
+    logger.info(f"Excel file is dowloaded successfully: {tickers_choice}")
